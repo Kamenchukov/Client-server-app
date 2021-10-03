@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import RealmSwift
 //struct GroupModel {
 //    let name: String
 //    let foto: String
@@ -25,22 +25,22 @@ import Foundation
 //    }
 //}
 struct Groups: Codable {
-     let response: GroupsResponse
+    let response: GroupsResponse
  }
 
  struct GroupsResponse: Codable {
-     let count: Int
-     let items: [Group]
+    let count: Int
+    let items: [Group]
  }
 
- struct Group: Codable {
-     let id: Int
-     let name: String
-     let screenName: String
-     let type: String
-     let photo50: String
-     let photo100: String
-     let photo200: String
+ class Group: Object, Codable {
+    @objc dynamic var id: Int = 0
+    @objc dynamic var name: String = ""
+    @objc dynamic var screenName: String = ""
+    @objc dynamic var type: String = ""
+    @objc dynamic var photo50: String = ""
+    @objc dynamic var photo100: String = ""
+    @objc dynamic var photo200: String = ""
     
      enum CodingKeys: String, CodingKey {
         case id

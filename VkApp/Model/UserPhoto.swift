@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import RealmSwift
 struct UserPhotos: Codable {
      let response: UserPhotosResponse
  }
@@ -16,17 +16,17 @@ struct UserPhotos: Codable {
      let items: [UserPhoto]
  }
 
- struct UserPhoto: Codable {
-     let albumId: Int
-     let date: Int
-     let id: Int
-     let ownerId: Int
-     let photo130: String
-     let photo604: String
-     let photo75: String
-     let photo807: String
-     let photo1280: String
-     let photo2560: String
+ class UserPhoto: Object, Codable {
+    @objc dynamic var albumId: Int = 0
+    @objc dynamic var date: Int = 0
+    @objc dynamic var id: Int = 0
+    @objc dynamic var ownerId: Int = 0
+    @objc dynamic var photo130: String = ""
+    @objc dynamic var photo604: String = ""
+    @objc dynamic var photo75: String = ""
+    @objc dynamic var photo807: String = ""
+    @objc dynamic var photo1280: String = ""
+    @objc dynamic var photo2560: String = ""
     
     enum CodingKeys: String, CodingKey{
         case albumId
