@@ -12,7 +12,7 @@ import UIKit
 class FotoViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     
-    var fotos = UsersFotoData.shared.userFoto
+    var fotos: [UserPhoto] = []
     var userId: Int?
     var vkService = VkService(session: MySession.shared)
     let errorMessage = "Ошибка"
@@ -56,7 +56,7 @@ extension FotoViewController: UICollectionViewDelegate, UICollectionViewDataSour
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "fotoCell", for: indexPath) as! FotoViewCell
         
         
-        cell.configure(fotos[indexPath.item])
+       
         
         
         return cell

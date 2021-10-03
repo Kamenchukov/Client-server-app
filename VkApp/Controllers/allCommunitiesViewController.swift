@@ -11,10 +11,11 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
     
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tabelView: UITableView!
-    var allCommunities = GroupData.shared.groupData
-    var foundCommunities = [GroupModel]()
+    var allCommunities: [Group] = []
+    var foundCommunities = [Group]()
     var searching = false
     let vkService = VkService(session: MySession.shared)
+    var allGroups = [Group]()
 
     let errorMessage = "Ошибка"
     
@@ -23,9 +24,10 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
         tabelView.dataSource = self
         tabelView.delegate = self
         self.searchBar.delegate = self
-        vkService.getGroups() { json in
-                     print("Мои группы")
-                     print(self.stringify(json) ?? self.errorMessage)
+        
+        vkService.getGroups() { [weak self] groups in
+            self?.allGroups = groups as! [Group]
+            self?.tabelView.reloadData()
                  }
     }
     func stringify(_ json: Any?) -> String? {
@@ -50,12 +52,13 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
     extension AllCommunitiesViewController: UITableViewDataSource, UITableViewDelegate {
      func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return searching ? foundCommunities.count: allCommunities.count
+        return allGroups.count
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "allGroups", for: indexPath) as! AllCommunitiesViewCell
         
-        cell.configure(searching ? foundCommunities[indexPath.row] : allCommunities[indexPath.row])
+        cell.allCommunitiesName.text = allGroups[indexPath.item].name
+    
         
         return cell
     }

@@ -23,7 +23,7 @@ class FriendsViewController: UIViewController {
     
     @IBOutlet weak var tabelView: UITableView!
     
-    var users = UsersData.shared.usersData
+    var users: [UserModel] = []
     private var firstLetters = [String]()
     private var sortedUsers = [[UserModel]]()
     let vkService = VkService(session: MySession.shared)
@@ -36,8 +36,8 @@ class FriendsViewController: UIViewController {
         tabelView.delegate = self
         tabelView.register(SectionHeaderTableView.self, forHeaderFooterViewReuseIdentifier: SectionHeaderTableView.identifier)
         
-        firstLetters = getFirstLetters(users)
-        sortedUsers = sortedUsers(users, letters: firstLetters)
+//        firstLetters = getFirstLetters(users)
+//        sortedUsers = sortedUsers(users, letters: firstLetters)
         vkService.getFriendsList() { json in
                      print("Список друзей")
                      print(self.stringify(json) ?? self.errorMessage)
@@ -60,23 +60,23 @@ class FriendsViewController: UIViewController {
              return nil
          }
     
-    private func sortedUsers(_ users: [UserModel], letters: [String]) -> [[UserModel]] {
-        var sortedUsers = [[UserModel]]()
-        
-        letters.forEach { letter in
-            let letterUser = users.filter { String($0.name.prefix(1)) == letter }.sorted(by: { $0.name < $1.name })
-            sortedUsers.append(letterUser)
-        }
-       
-        return sortedUsers
-    }
-    
-    private func getFirstLetters(_ users: [UserModel]) -> [String] {
-        let usersName = users.map { $0.name }
-        let firstLetters = Array(Set(usersName.map { String($0.prefix(1)) })).sorted()
-        return firstLetters.removeDuplicates()
-    }
-    
+//    private func sortedUsers(_ users: [UserModel], letters: [String]) -> [[UserModel]] {
+//        var sortedUsers = [[UserModel]]()
+//
+//        letters.forEach { letter in
+//            let letterUser = users.filter { String($0.name.prefix(1)) == letter }.sorted(by: { $0.name < $1.name })
+//            sortedUsers.append(letterUser)
+//        }
+//
+//        return sortedUsers
+//    }
+//
+//    private func getFirstLetters(_ users: [UserModel]) -> [String] {
+//        let usersName = users.map { $0.name }
+//        let firstLetters = Array(Set(usersName.map { String($0.prefix(1)) })).sorted()
+//        return firstLetters.removeDuplicates()
+//    }
+//
 }
     // MARK: - Table view data source
 
@@ -98,7 +98,8 @@ class FriendsViewController: UIViewController {
             
     }
         let user = sortedUsers[indexPath.section][indexPath.row]
-        cell.configure(user)
+        let friend: UserModel = users[indexPath.row]
+        cell.textLabel?.text = "\(friend.firstName) \(friend.lastName)"
         return cell
     }
 
