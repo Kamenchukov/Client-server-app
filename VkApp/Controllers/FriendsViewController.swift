@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RealmSwift
 extension Array where Element:Equatable {
     func removeDuplicates() -> [Element] {
         var result = [Element]()
@@ -26,7 +27,7 @@ class FriendsViewController: UIViewController {
     var users: [UserModel] = []
     private var firstLetters = [String]()
     private var sortedUsers = [[UserModel]]()
-    let vkService = VkService(session: MySession.shared)
+    let vkService = VkService()
 
     let errorMessage = "Ошибка"
         
@@ -38,10 +39,18 @@ class FriendsViewController: UIViewController {
         
 //        firstLetters = getFirstLetters(users)
 //        sortedUsers = sortedUsers(users, letters: firstLetters)
-        vkService.getFriendsList() { json in
-                     print("Список друзей")
-                     print(self.stringify(json) ?? self.errorMessage)
-                 }
+        loadData()
+//        vkService.getFriendsList() { [weak, self] in
+//            self?.loadData()
+//            self?.tableView.reloadData()
+//                    // print(self.stringify(json) ?? self.errorMessage)
+//                 }
+        vkService.getFriendsList() {
+            self.loadData()
+            self.tabelView.reloadData()
+        }
+        
+        
     }
     func stringify(_ json: Any?) -> String? {
              guard let json = json else {
@@ -59,6 +68,7 @@ class FriendsViewController: UIViewController {
 
              return nil
          }
+    
     
 //    private func sortedUsers(_ users: [UserModel], letters: [String]) -> [[UserModel]] {
 //        var sortedUsers = [[UserModel]]()
@@ -109,6 +119,16 @@ class FriendsViewController: UIViewController {
         
         func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
             30
+        }
+        func loadData() {
+                 do {
+                     let realm = try Realm()
+                     let users = realm.objects(UserModel.self)
+                     self.users = Array(users)
+
+                 } catch { print(error)
+                    
+                 }
         }
         // MARK: - Navigation
         

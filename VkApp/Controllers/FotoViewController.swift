@@ -6,7 +6,7 @@
 //
 
 import UIKit
-
+import RealmSwift
 
 
 class FotoViewController: UIViewController {
@@ -14,17 +14,21 @@ class FotoViewController: UIViewController {
     
     var fotos: [UserPhoto] = []
     var userId: Int?
-    var vkService = VkService(session: MySession.shared)
+    var vkService = VkService()
     let errorMessage = "Ошибка"
     
     override func viewDidLoad() {
         super.viewDidLoad()
         collectionView.delegate = self
         collectionView.dataSource = self
-        vkService.getPhotos() { json in
-                     print("Мои фото")
-                     print(self.stringify(json) ?? self.errorMessage)
-                 }
+        loadData()
+        collectionView.reloadData()
+        
+        vkService.getPhotos() {
+            self.loadData()
+            self.collectionView.reloadData()
+            
+        }
     }
     
     func stringify(_ json: Any?) -> String? {
@@ -72,5 +76,12 @@ extension FotoViewController: UICollectionViewDelegate, UICollectionViewDataSour
         friendCarouselPhotoViewController.photoId = indexCell
         
     }
+    func loadData() {
+             do {
+                 let realm = try Realm()
+                 let photos = realm.objects(UserPhoto.self).filter("ownerId = \(Int(userId!))")
+                 self.fotos = Array(photos)
 
+             } catch { print(error) }
+         }
 }

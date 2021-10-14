@@ -5,60 +5,136 @@
 ////  Created by Константин Каменчуков on 16.07.2021.
 ////
 import Foundation
-
+import RealmSwift
+import Alamofire
  class VkService {
 
-     let VKSession = URLSession(configuration: .default)
+    let baseURL = "https://api.vk.com/method/"
+         let clientId = "7823707"
+         let version = "5.21"
 
-     var VKURLComponents = URLComponents()
+         let config = Realm.Configuration(deleteRealmIfMigrationNeeded: true)
 
-     let scheme = "https"
-     let host = "api.vk.com"
-     let path = "/method"
+     func getFriendsList(completion: @escaping () -> Void) {
+     let path = "friends.get"
 
-     let client_id = "7904602"
+     let parameters: Parameters = [
+         "user_id": MySession.shared.userId ?? "0",
+         "access_token": MySession.shared.token ?? "0",
+         "v": version,
+         "fields": "photo_100"
+     ]
 
-     init(session: MySession) {
+     let url = baseURL + path
 
-         self.VKURLComponents.scheme = scheme
-         self.VKURLComponents.host = host
-         self.VKURLComponents.queryItems = [
-             URLQueryItem(name: "client_id", value: client_id),
-             URLQueryItem(name: "user_id", value: "\(session.userId)"),
-             URLQueryItem(name: "access_token", value: "\(session.token)"),
-             URLQueryItem(name: "v", value: "5.68"),
-         ]
-     }
+     AF.request(url, method: .get, parameters: parameters).responseData {
+         response in
+             guard let data = response.value else { return }
+             do {
+                 let decoder = JSONDecoder()
+                 decoder.keyDecodingStrategy = .convertFromSnakeCase
+                 let users = try decoder.decode(Friends.self, from: data)
 
-
-     func getFriendsList(completion: @escaping (Any?) -> ()) {
-
-         VKURLComponents.path = path + "/friends.get"
-         VKURLComponents.queryItems?.append(URLQueryItem(name: "fields", value: "nickname, city, country, sex"))
-         perform(VKURLComponents, completion)
-     }
-
-     func getPhotos(completion: @escaping (Any?) -> ()) {
-
-         VKURLComponents.path = path + "/photos.getAll"
-         VKURLComponents.queryItems?.append(URLQueryItem(name: "no_service_albums", value: "0"))
-         perform(VKURLComponents, completion)
-     }
-
-     func getGroups(completion: @escaping (Any?) -> ()) {
-
-         VKURLComponents.path = path + "/groups.get"
-         VKURLComponents.queryItems?.append(URLQueryItem(name: "extended", value: "1"))
-         VKURLComponents.queryItems?.append(URLQueryItem(name: "fields", value: "description, members_count"))
-         perform(VKURLComponents, completion)
-     }
-
-
-     private func perform(_ urlComponents: URLComponents, _ completion: @escaping (Any?) -> ()) {
-         let task = VKSession.dataTask(with: urlComponents.url!) {(data, response, error) in
-             let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
-             completion(json ?? nil)
+                 self.saveFriendsList(users.response.items)
+                 completion()
+             } catch {
+                 print(error)
+             }
          }
-         task.resume()
-     }
+ }
+    func saveFriendsList(_ friends: [UserModel]) {
+        do {
+            let realm = try Realm(configuration: config)
+            realm.beginWrite()
+            realm.add(friends, update: .modified)
+            try realm.commitWrite()
+        } catch {
+            print(error)
+        }
+    }
+    func getPhotos(friendId: Int = MySession.shared.userId!, completion: @escaping () -> Void) {
+        let path = "photos.getAll"
+
+        print(friendId)
+
+        let parameters: Parameters = [
+            "owner_id": friendId,
+            "access_token": MySession.shared.token ?? "0",
+            "v": version,
+            "no_service_albums": 0,
+            "count": 50,
+            "extended": 1
+        ]
+         let url = baseURL + path
+
+        AF.request(url, method: .get, parameters: parameters).responseData {
+            response in
+            guard let data = response.value else { return }
+            do {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                let photos = try decoder.decode(UserPhotos.self, from: data)
+                self.savePhoto(photos.response.items)
+                completion()
+            } catch {
+                print(error)
+            }
+        }
+    }
+    func savePhoto(_ photos: [UserPhoto]) {
+        do {
+            let realm = try Realm(configuration: config)
+            realm.beginWrite()
+            realm.add(photos, update: .modified)
+            try realm.commitWrite()
+        } catch {
+            print(error)
+        }
+    }
+
+     func getGroups(completion: @escaping () -> Void) {
+        let path = "groups.get"
+
+        let parameters: Parameters = [
+            "user_id": MySession.shared.userId ?? "0",
+            "access_token": MySession.shared.token ?? "0",
+            "v": version,
+            "extended": "1"
+        ]
+
+        let url = baseURL + path
+
+        AF.request(url, method: .get, parameters: parameters).responseData {
+            response in
+            guard let data = response.value else { return }
+            do {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                let groups = try decoder.decode(Groups.self, from: data)
+                self.saveGroups(groups.response.items)
+                completion()
+            } catch {
+                print(error)
+            }
+        }
+    }
+    func saveGroups(_ groups: [Group]) {
+        do {
+            let realm = try Realm(configuration: config)
+            realm.beginWrite()
+            realm.add(groups, update: .modified)
+            try realm.commitWrite()
+        } catch {
+            print(error)
+        }
+    }
+
+
+//     private func perform(_ urlComponents: URLComponents, _ completion: @escaping (Any?) -> ()) {
+//         let task = VKSession.dataTask(with: urlComponents.url!) {(data, response, error) in
+//             let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
+//             completion(json ?? nil)
+//         }
+//         task.resume()
+//     }
  }

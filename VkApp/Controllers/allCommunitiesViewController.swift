@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RealmSwift
 
 class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
     
@@ -14,7 +15,7 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
     var allCommunities: [Group] = []
     var foundCommunities = [Group]()
     var searching = false
-    let vkService = VkService(session: MySession.shared)
+    let vkService = VkService()
     var allGroups = [Group]()
 
     let errorMessage = "Ошибка"
@@ -25,9 +26,12 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
         tabelView.delegate = self
         self.searchBar.delegate = self
         
-        vkService.getGroups() { [weak self] groups in
-            self?.allGroups = groups as! [Group]
-            self?.tabelView.reloadData()
+        loadData()
+        tabelView.reloadData()
+        
+        vkService.getGroups() {
+            self.loadData()
+            self.tabelView.reloadData()
                  }
     }
     func stringify(_ json: Any?) -> String? {
@@ -74,4 +78,12 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
             searchBar.text = ""
             tabelView.reloadData()
         }
+        func loadData() {
+                 do {
+                     let realm = try Realm()
+                     let gorups = realm.objects(Group.self)
+                    self.allCommunities = Array(gorups)
+
+                 } catch { print(error) }
+             }
 }
