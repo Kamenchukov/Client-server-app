@@ -10,25 +10,25 @@ import RealmSwift
 
 
 class FotoViewController: UIViewController {
+    
     @IBOutlet weak var collectionView: UICollectionView!
     
-    var fotos: [UserPhoto] = []
+    var fotos: Results<UserPhoto>?
     var userId: Int?
     var vkService = VkService()
     let errorMessage = "Ошибка"
+    var token: NotificationToken?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         collectionView.delegate = self
         collectionView.dataSource = self
-        loadData()
         collectionView.reloadData()
         
-        vkService.getPhotos() {
-            self.loadData()
+        vkService.getPhotos(friendId: userId ?? 0) {
             self.collectionView.reloadData()
-            
         }
+        realmObserve()
     }
     
     func stringify(_ json: Any?) -> String? {
@@ -47,13 +47,13 @@ class FotoViewController: UIViewController {
 
              return nil
          }
-
+  
 }
 extension FotoViewController: UICollectionViewDelegate, UICollectionViewDataSource {
 
      func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
-        return fotos.count
+        return fotos?.count ?? 0
     }
 
      func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -76,12 +76,30 @@ extension FotoViewController: UICollectionViewDelegate, UICollectionViewDataSour
         friendCarouselPhotoViewController.photoId = indexCell
         
     }
-    func loadData() {
-             do {
-                 let realm = try Realm()
-                 let photos = realm.objects(UserPhoto.self).filter("ownerId = \(Int(userId!))")
-                 self.fotos = Array(photos)
+    func realmObserve() {
+        guard let realm = try? Realm() else { return }
 
-             } catch { print(error) }
-         }
+        fotos = realm.objects(UserPhoto.self).filter("ownerId = \(Int(userId!))")
+        token = fotos?.observe {[weak self] (changes: RealmCollectionChange) in
+
+            guard let self = self,
+                  let collectionView = self.collectionView else { return }
+
+            switch changes {
+                case .initial:
+                    collectionView.reloadData()
+                case .update(_, let deletions, let insertions, let modifications):
+                    collectionView.performBatchUpdates({
+                        collectionView.insertItems(at: insertions.map({ IndexPath(row: $0, section: 0) }))
+                        collectionView.deleteItems(at: deletions.map({ IndexPath(row: $0, section: 0)}))
+                        collectionView.reloadItems(at: modifications.map({ IndexPath(row: $0, section: 0) }))
+                    }, completion: nil)
+                case .error(let error):
+                    fatalError("\(error)")
+            }
+
+        }
+
+    }
+
 }

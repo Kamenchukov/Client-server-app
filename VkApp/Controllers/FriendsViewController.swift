@@ -28,6 +28,7 @@ class FriendsViewController: UIViewController {
     private var firstLetters = [String]()
     private var sortedUsers = [[UserModel]]()
     let vkService = VkService()
+    var token: NotificationToken?
 
     let errorMessage = "Ошибка"
         
@@ -39,17 +40,15 @@ class FriendsViewController: UIViewController {
         
 //        firstLetters = getFirstLetters(users)
 //        sortedUsers = sortedUsers(users, letters: firstLetters)
-        loadData()
 //        vkService.getFriendsList() { [weak, self] in
 //            self?.loadData()
 //            self?.tableView.reloadData()
 //                    // print(self.stringify(json) ?? self.errorMessage)
 //                 }
         vkService.getFriendsList() {
-            self.loadData()
             self.tabelView.reloadData()
         }
-        
+        observeRealm()
         
     }
     func stringify(_ json: Any?) -> String? {
@@ -120,16 +119,28 @@ class FriendsViewController: UIViewController {
         func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
             30
         }
-        func loadData() {
-                 do {
-                     let realm = try Realm()
-                     let users = realm.objects(UserModel.self)
-                     self.users = Array(users)
+        func observeRealm() {
+            do {
+                         let realm = try Realm()
+                         token = realm.objects(UserModel.self).observe { [weak self] (changes: RealmCollectionChange) in
+                             guard let self = self,
+                                   let tableView = self.tabelView else { return }
 
-                 } catch { print(error)
-                    
-                 }
-        }
+                             self.users = Array(realm.objects(UserModel.self))
+                            if self.users.count > 0 {
+    
+                             }
+
+                             switch changes {
+                                 case .initial, .update:
+                                     tableView.reloadData()
+                                 case .error(let error):
+                                     fatalError("\(error)")
+                             }
+                         }
+                     } catch { print(error) }
+                }
+        
         // MARK: - Navigation
         
 //        func prepare(for segue: UIStoryboardSegue, sender: Any?) {
