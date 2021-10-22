@@ -25,7 +25,7 @@ class FotoViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.reloadData()
         
-        vkService.getPhotos(friendId: userId ?? 0) {
+        vkService.getPhotos(friendId: String(userId ?? 0)) {
             self.collectionView.reloadData()
         }
         realmObserve()

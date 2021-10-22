@@ -12,6 +12,6 @@ import UIKit
 
      private init() {}
 
-     var token: String?
-     var userId: Int?
+     var token: String? = nil
+     var userId: String? = nil
  }

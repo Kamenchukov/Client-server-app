@@ -7,6 +7,7 @@
 
 import UIKit
 import WebKit
+import FirebaseDatabase
 
 class WkWebView: UIViewController {
     
@@ -67,11 +68,12 @@ extension WkWebView: WKNavigationDelegate {
         
         print(token)
         MySession.shared.token = token
-        MySession.shared.userId = Int(userId)
+        MySession.shared.userId = userId
         
         showFriendsVC()
         
         decisionHandler(.cancel)
+        self.performSegue(withIdentifier: "showFriendsSegue", sender: nil)
     }
     func showFriendsVC() {
         

@@ -52,7 +52,7 @@ import Alamofire
             print(error)
         }
     }
-    func getPhotos(friendId: Int = MySession.shared.userId!, completion: @escaping () -> Void) {
+    func getPhotos(friendId: String = MySession.shared.userId!, completion: @escaping () -> Void) {
         let path = "photos.getAll"
 
         print(friendId)

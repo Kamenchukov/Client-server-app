@@ -7,6 +7,7 @@
 
 import UIKit
 import RealmSwift
+import FirebaseDatabase
 
 class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
     
@@ -17,7 +18,7 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
     var searching = false
     let vkService = VkService()
     var allGroups = [Group]()
-
+    private let ref = Database.database().reference(withPath: "authUser")
     let errorMessage = "Ошибка"
     
     override func viewDidLoad() {
@@ -66,6 +67,19 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
         
         return cell
     }
+        func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+            let userRef = ref.child(MySession.shared.userId ?? "0")
+            
+            print(userRef)
+            
+            let groupRef = userRef.child("\(allGroups[indexPath.item].id)")
+            
+            groupRef.setValue([
+                "groupID": allGroups[indexPath.item].id,
+                "groupName": allGroups[indexPath.item].name
+            ])
+            
+        }
     
         public func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
             foundCommunities = searchText != "" ? allCommunities.filter {$0.name.lowercased().contains(searchText.lowercased())} : allCommunities
