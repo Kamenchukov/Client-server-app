@@ -128,13 +128,47 @@ import Alamofire
             print(error)
         }
     }
+    //MARK: - load news
+    func loadNews(results: @escaping ([NewsItem], [NewsProfiles], [NewsGroups]) -> Void) {
+             let path = "newsfeed.get"
+             let parameters: Parameters = [
+                 "filters": "post",
+                "access_token": MySession.shared.token ?? "0",
+                 "v": version,
+                 "count": 5
+             ]
+        let url = baseURL + path
+        
+        AF.request(url, method: .get, parameters: parameters).responseJSON {
+                     response in
+            guard let json = response.value else { return }
 
+                         let result = json as! [String: Any]
+                         let response = result["response"] as! [String: Any]
 
-//     private func perform(_ urlComponents: URLComponents, _ completion: @escaping (Any?) -> ()) {
-//         let task = VKSession.dataTask(with: urlComponents.url!) {(data, response, error) in
-//             let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
-//             completion(json ?? nil)
-//         }
-//         task.resume()
-//     }
+                         var posts: [NewsItem] = []
+                         var profiles: [NewsProfiles] = []
+                         var groups: [NewsGroups] = []
+                         let dispatchGroup = DispatchGroup()
+
+                         DispatchQueue.global().async(group: dispatchGroup) {
+                             let postsJson = response["items"] as! [[String: Any]]
+                             posts = postsJson.map { NewsItem(json: $0) }
+                         }
+
+                         DispatchQueue.global().async(group: dispatchGroup) {
+                             let profilesJson = response["profiles"] as! [[String: Any]]
+                             profiles = profilesJson.map { NewsProfiles(json: $0) }
+                         }
+
+                         DispatchQueue.global().async(group: dispatchGroup) {
+                             let groupsJson = response["groups"] as! [[String: Any]]
+                             groups = groupsJson.map { NewsGroups(json: $0) }
+                         }
+
+                         dispatchGroup.notify(queue: DispatchQueue.main) {
+                             results(posts, profiles, groups)
+                         }
+                     }
+                 }
  }

@@ -9,15 +9,21 @@ import UIKit
 
 class FooterNewsTableViewCell: UITableViewCell {
 
+    @IBOutlet weak var likeNumber: UILabel!
+    @IBOutlet weak var commentNumber: UILabel!
+    
+    @IBOutlet weak var shareNumber: UILabel!
+    
+    @IBOutlet weak var viewsNumber: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+      
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
 
-        // Configure the view for the selected state
+       
     }
     
 }
