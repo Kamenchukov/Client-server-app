@@ -141,18 +141,5 @@ class FriendsViewController: UIViewController {
                      } catch { print(error) }
                 }
         
-        // MARK: - Navigation
-        
-//        func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-//
-//            guard let fotoViewController = segue.destination as? FotoViewController,
-//                  let indexRow = tableView.indexPathForSelectedRow?.row
-//            else {
-//                return
-//            }
-//
-//            let indexSection = tableView.indexPathForSelectedRow!.section
-//
-//            fotoViewController.userID = sortedFriends[indexSection][indexRow].id
-//        }
+
 }
