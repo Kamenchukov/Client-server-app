@@ -16,41 +16,18 @@ import Alamofire
          let config = Realm.Configuration(deleteRealmIfMigrationNeeded: true)
 
      func getFriendsList(completion: @escaping () -> Void) {
-     let path = "friends.get"
+     let friendsOperationQueue = OperationQueue()
 
-     let parameters: Parameters = [
-         "user_id": MySession.shared.userId ?? "0",
-         "access_token": MySession.shared.token ?? "0",
-         "v": version,
-         "fields": "photo_100"
-     ]
+     let getFriendsOperation = GetFriendsOperation(baseURL: baseURL, clientId: clientId, version: version)
+     let parseFriendsOperation = ParseFriendsOperation()
+     let saveFriendsOperation = SaveFriendsOperation()
 
-     let url = baseURL + path
+     parseFriendsOperation.addDependency(getFriendsOperation)
+     saveFriendsOperation.addDependency(parseFriendsOperation)
 
-     AF.request(url, method: .get, parameters: parameters).responseData {
-         response in
-             guard let data = response.value else { return }
-             do {
-                 let decoder = JSONDecoder()
-                 decoder.keyDecodingStrategy = .convertFromSnakeCase
-                 let users = try decoder.decode(Friends.self, from: data)
-
-                 self.saveFriendsList(users.response.items)
-                 completion()
-             } catch {
-                 print(error)
-             }
-         }
- }
-    func saveFriendsList(_ friends: [UserModel]) {
-        do {
-            let realm = try Realm(configuration: config)
-            realm.beginWrite()
-            realm.add(friends, update: .modified)
-            try realm.commitWrite()
-        } catch {
-            print(error)
-        }
+     friendsOperationQueue.addOperation(getFriendsOperation)
+     friendsOperationQueue.addOperation(parseFriendsOperation)
+     friendsOperationQueue.addOperation(saveFriendsOperation)
     }
     func getPhotos(friendId: String = MySession.shared.userId!, completion: @escaping () -> Void) {
         let path = "photos.getAll"
