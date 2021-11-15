@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+enum AppError: Error {
+     case noDataProvided
+     case failedToDecode
+     case noDataSave
+ }

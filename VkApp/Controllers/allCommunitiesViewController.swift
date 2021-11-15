@@ -30,10 +30,7 @@ class AllCommunitiesViewController: UIViewController, UISearchBarDelegate {
         loadData()
         tabelView.reloadData()
         
-        vkService.getGroups() {
-            self.loadData()
-            self.tabelView.reloadData()
-                 }
+        vkService.getGroups()
     }
     func stringify(_ json: Any?) -> String? {
              guard let json = json else {

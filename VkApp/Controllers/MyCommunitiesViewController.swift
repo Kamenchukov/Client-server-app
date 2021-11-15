@@ -20,9 +20,7 @@ class MyCommunitiesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.reloadData()
-        vkService.getGroups() {
-            self.tableView.reloadData()
-        }
+        vkService.getGroups()
         realmObserve()
         
         }

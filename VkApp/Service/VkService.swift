@@ -7,6 +7,8 @@
 import Foundation
 import RealmSwift
 import Alamofire
+import PromiseKit
+
  class VkService {
 
     let baseURL = "https://api.vk.com/method/"
@@ -68,8 +70,19 @@ import Alamofire
             print(error)
         }
     }
+     func loadCommunities() {
 
-     func getGroups(completion: @escaping () -> Void) {
+                  getGroups()
+                  .then(parseCommunitiesPromise(_:))
+                  .get { data in
+                      print(data[0])
+                  }
+                  .done(saveGroups(_:))
+                  .catch { error in
+                      print(error)
+                  }
+          }
+     func getGroups() -> Promise<Data> {
         let path = "groups.get"
 
         let parameters: Parameters = [
@@ -81,20 +94,29 @@ import Alamofire
 
         let url = baseURL + path
 
-        AF.request(url, method: .get, parameters: parameters).responseData {
-            response in
-            guard let data = response.value else { return }
-            do {
-                let decoder = JSONDecoder()
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                let groups = try decoder.decode(Groups.self, from: data)
-                self.saveGroups(groups.response.items)
-                completion()
-            } catch {
-                print(error)
-            }
-        }
+         return Promise { resolver in
+                      AF.request(url, method: .get, parameters: parameters).responseData {
+                          response in
+                          guard let data = response.value else {
+                              resolver.reject(AppError.noDataProvided)
+                              return
+                          }
+
+                          resolver.fulfill(data)
+                      }
+                  }
     }
+     func parseCommunitiesPromise(_ data: Data) -> Promise<[Group]> {
+
+              return Promise { resolver in
+                  do {
+                      let decoder = JSONDecoder()
+                      decoder.keyDecodingStrategy = .convertFromSnakeCase
+                      let groups = try decoder.decode(Groups.self, from: data)
+                      resolver.fulfill(groups.response.items)
+                  } catch { resolver.reject(AppError.failedToDecode) }
+              }
+          }
     func saveGroups(_ groups: [Group]) {
         do {
             let realm = try Realm(configuration: config)
@@ -102,7 +124,7 @@ import Alamofire
             realm.add(groups, update: .modified)
             try realm.commitWrite()
         } catch {
-            print(error)
+            print(AppError.noDataSave)
         }
     }
     //MARK: - load news
